@@ -90,11 +90,3 @@ namespace NewtonovyZakony{
     }
 
 }
-NewtonovyZakony.spustOdesilatele(
-10,
-Dimension.Z,
-"Z",
-0,
-0,
-AcceleratorRange.OneG
-)
