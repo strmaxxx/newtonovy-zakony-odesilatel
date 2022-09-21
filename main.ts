@@ -6,6 +6,7 @@ namespace NewtonovyZakony{
         let suma = 0
         let index = 0
         let pole_hodnot: any[] = [];
+        let posledni_hodnota = 0;
 
         if (!range) range = AcceleratorRange.OneG;
         if (!t_pause) t_pause = 50;
@@ -16,7 +17,12 @@ namespace NewtonovyZakony{
         control.inBackground(function(){
 
             while (true) {
-                pole_hodnot[index] = input.acceleration(dimension)
+
+                let hodnota = input.acceleration(dimension)
+                if (Math.abs(hodnota - posledni_hodnota) < 10) hodnota = posledni_hodnota;
+
+                posledni_hodnota = hodnota;
+                pole_hodnot[index] = hodnota;
                 index += 1
                 if (index > avg_count) index = 0
 
