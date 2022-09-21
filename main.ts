@@ -49,7 +49,7 @@ namespace NewtonovyZakony{
 
     }
 
-
+    //% block="Spustí Příjemce a ovladač skupina_rádia: %radioGroup"
     export function spustPrijemce(radioGroup: number){
 
         let prijato = false;
