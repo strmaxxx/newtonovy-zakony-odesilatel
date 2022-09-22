@@ -60,10 +60,34 @@ namespace NewtonovyZakony{
                 pause(10);
             }
         });
+
+        let buffer: any[] = [];
+        let buffer_index = 0;
+
+
         control.inBackground(function () {
             while (true) {
 
-                radio.sendString(popis_hodnoty + ":" + Math.round(hodnota_zrychleni))
+                buffer[buffer_index] = Math.round(hodnota_zrychleni);
+                if (buffer_index < 3) buffer_index++;
+                else buffer.shift();
+
+                pause(t_pause / 3);
+            }
+        })
+
+        control.inBackground(function () {
+            while (true) {
+
+                let text = "";
+                for (let k = 0; k < buffer.length; k++){
+
+                    if (text != '') text += ';'; 
+                    text += buffer[k];
+                     
+                }
+
+                radio.sendString(popis_hodnoty + ":" + text)
                 //serial.writeLine(popis_hodnoty + ":" + suma / pole_hodnot.length)
                 pause(t_pause);
             }
@@ -97,7 +121,24 @@ namespace NewtonovyZakony{
         let prijato = false;
 
         radio.onReceivedString(function (receivedString) {
-            serial.writeLine(receivedString)
+            if(receivedString.includes(';')){
+
+                let data = receivedString.split(';');
+                let popis = data[0].substr(0, data[0].indexOf(':')+1);
+
+                serial.writeLine(data[0]);
+                pause(10);
+
+                for (let l = 1; l < data.length; l++){
+                    serial.writeLine(popis + data[l]);
+                    pause(10);
+                }
+
+            }else{
+
+
+                serial.writeLine(receivedString)
+            }
             prijato = true;
         })
         radio.setGroup(radioGroup)
