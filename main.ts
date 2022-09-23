@@ -50,6 +50,10 @@ namespace NewtonovyZakony{
                     }
 
                     hodnota_zrychleni = value;
+                }else if(true){
+                    
+                    prubezna_hodnota = prubezna_hodnota * 0.9 + hodnota*0.1;
+                    hodnota_zrychleni = prubezna_hodnota;
                 }else{
 
                     //let smoothing = 10; // koeficient vyhlazení = avg_count
@@ -69,10 +73,10 @@ namespace NewtonovyZakony{
             while (true) {
 
                 buffer[buffer_index] = Math.round(hodnota_zrychleni);
-                if (buffer_index < 3) buffer_index++;
+                if (buffer_index < 2) buffer_index++;
                 else buffer.shift();
 
-                pause(t_pause / 3);
+                pause(t_pause / 2);
             }
         })
 
@@ -127,11 +131,11 @@ namespace NewtonovyZakony{
                 let popis = data[0].substr(0, data[0].indexOf(':')+1);
 
                 serial.writeLine(data[0]);
-                pause(10);
+                pause(20);
 
                 for (let l = 1; l < data.length; l++){
                     serial.writeLine(popis + data[l]);
-                    pause(10);
+                    pause(20);
                 }
 
             }else{
