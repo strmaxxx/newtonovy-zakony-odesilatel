@@ -9,7 +9,7 @@ namespace NewtonovyZakony {
     const pocet_cisel = 5;
     const t_pause = 125;
 
-    //% block="Spustí odesílatele skupina_rádia: %radioGroup, Osa_akcelerometru: %dimension, popis_hodnoty (Maximálně 9 ASCII znaků): %popis_hodnoty, rychlost_motoru: %rychlost_motoru, Rozsah měřených hodnot: %range"
+    //% block="Spustí měření a odesílání dat a inicializuje motory, skupina_rádia: %radioGroup, Osa_akcelerometru: %dimension, popis_hodnoty (Maximálně 9 ASCII znaků): %popis_hodnoty, rychlost_motoru: %rychlost_motoru, Rozsah měřených hodnot: %range"
     export function spustOdesilatele(radioGroup: number, dimension: Dimension, popis_hodnoty:string, rychlost_motoru?:number, range?: AcceleratorRange){
 
         let prubezna_hodnota = 0;
@@ -61,14 +61,14 @@ namespace NewtonovyZakony {
 
                 let buf = pins.createBuffer(pocet_cisel*2 + popis_hodnoty.length)
 
-                for (let i = 0; i < pocet_cisel; i++){
+                for (let j = 0; j < pocet_cisel; j++){
 
-                    buf.setNumber(NumberFormat.Int16LE, i * 2, buffer[i])
+                    buf.setNumber(NumberFormat.Int16LE, j * 2, buffer[j])
                 }
 
-                for (let i = 0; i < popis_hodnoty.length; i++) {
+                for (let k = 0; k < popis_hodnoty.length; k++) {
 
-                    buf.setNumber(NumberFormat.Int8LE, pocet_cisel*2+i, popis_hodnoty.charCodeAt(i));
+                    buf.setNumber(NumberFormat.Int8LE, pocet_cisel*2+k, popis_hodnoty.charCodeAt(k));
                 }
 
                 radio.sendBuffer(buf);
@@ -90,7 +90,7 @@ namespace NewtonovyZakony {
 
     }
 
-    //% block="Spustí Příjemce a ovladač skupina_rádia: %radioGroup"
+    //% block="Spustí příjemce a ovladač motorů. skupina_rádia: %radioGroup"
     export function spustPrijemce(radioGroup: number){
 
         let prijato = false;
@@ -98,13 +98,13 @@ namespace NewtonovyZakony {
         radio.onReceivedBuffer(function (receivedBuffer) {
 
             let popis = '';
-            for (let i = pocet_cisel * 2; i < receivedBuffer.length; i++) {
+            for (let l = pocet_cisel * 2; l < receivedBuffer.length; l++) {
 
-                popis += String.fromCharCode(receivedBuffer.getNumber(NumberFormat.Int8LE, i));
+                popis += String.fromCharCode(receivedBuffer.getNumber(NumberFormat.Int8LE, l));
             }
-            for (let i = 0; i < pocet_cisel; i++) {
+            for (let m = 0; m < pocet_cisel; m++) {
 
-                serial.writeLine(popis + ':' + receivedBuffer.getNumber(NumberFormat.Int16LE, i * 2));
+                serial.writeLine(popis + ':' + receivedBuffer.getNumber(NumberFormat.Int16LE, m * 2));
                 pause(t_pause/5-1);
             }
 
