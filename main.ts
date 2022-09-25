@@ -2,12 +2,12 @@ namespace NewtonovyZakony {
     /**
      * Každých 5 ms změří hodnotu z akcelerometru a filtruje ji dolnopropustným filtrem.
      * Každých t_pause/5 ms (25 ms) ukládá aktuální hodnotu do bufferu, který obsahuje 5 hodnot.
-     * Každých t_pause ms (150 ms) odešle buffer s popisem hodnot rádiem.
+     * Každých t_pause ms (125 ms) odešle buffer s popisem hodnot rádiem.
      * Rádiem lze odeslat maximálně 19 bajtů. 5 čísel = 10 bajtů + 9 bajtů na popis hodnoty ASCII znaky
      */
 
     const pocet_cisel = 5;
-    const t_pause = 150;
+    const t_pause = 125;
 
     //% block="Spustí odesílatele skupina_rádia: %radioGroup, Osa_akcelerometru: %dimension, popis_hodnoty (Maximálně 9 ASCII znaků): %popis_hodnoty, rychlost_motoru: %rychlost_motoru, Rozsah měřených hodnot: %range"
     export function spustOdesilatele(radioGroup: number, dimension: Dimension, popis_hodnoty:string, rychlost_motoru?:number, range?: AcceleratorRange){
