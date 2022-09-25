@@ -1,98 +1,77 @@
-namespace NewtonovyZakony{
+namespace NewtonovyZakony {
+    /**
+     * Každých 5 ms změří hodnotu z akcelerometru a filtruje ji dolnopropustným filtrem.
+     * Každých t_pause/5 ms (25 ms) ukládá aktuální hodnotu do bufferu, který obsahuje 5 hodnot.
+     * Každých t_pause ms (150 ms) odešle buffer s popisem hodnot rádiem.
+     * Rádiem lze odeslat maximálně 19 bajtů. 5 čísel = 10 bajtů + 9 bajtů na popis hodnoty ASCII znaky
+     */
 
-    //% block="Spustí odeílatele skupina_rádia: %radioGroup, Osa_akcelerometru: %dimension, popis_hodnoty: %popis_hodnoty, rychlost_motoru: %rychlost_motoru, Pauza_mezi_merenimi(ms): %t_pause, Počet hodnot v klouzavém průměru: %avg_count, Rozsah měřených hodnot: %range"
-    export function spustOdesilatele(radioGroup: number, dimension: Dimension, popis_hodnoty:string, rychlost_motoru:number, t_pause?: number, avg_count?: number, range?: AcceleratorRange){
+    const pocet_cisel = 5;
+    const t_pause = 150;
+
+    //% block="Spustí odesílatele skupina_rádia: %radioGroup, Osa_akcelerometru: %dimension, popis_hodnoty (Maximálně 9 ASCII znaků): %popis_hodnoty, rychlost_motoru: %rychlost_motoru, Rozsah měřených hodnot: %range"
+    export function spustOdesilatele(radioGroup: number, dimension: Dimension, popis_hodnoty:string, rychlost_motoru?:number, range?: AcceleratorRange){
 
         let prubezna_hodnota = 0;
         let hodnota_zrychleni = 0;
-        let index = 0
-        let pole_hodnot: any[] = [];
-        let posledni_hodnota = 0;
 
         if (!range) range = AcceleratorRange.OneG;
-        if (!t_pause) t_pause = 50;
+        if (!rychlost_motoru) rychlost_motoru = 100;
 
         radio.setGroup(radioGroup);
-        input.setAccelerometerRange(range)
+        input.setAccelerometerRange(range);
 
         control.inBackground(function(){
 
             while (true) {
 
                 let hodnota = input.acceleration(dimension)
-                //if (Math.abs(hodnota - posledni_hodnota) < 10) hodnota = posledni_hodnota;
 
-                posledni_hodnota = hodnota;
-
-
-                if(false){ // klouzavý průměr
-
-                    pole_hodnot[index] = hodnota;
-
-                    if (index >= avg_count) index = 0;
-
-                    let suma = 0
-                    for (let i = 0; i < pole_hodnot.length; i++) suma += pole_hodnot[i]
-                    hodnota_zrychleni = suma / pole_hodnot.length;
-
-                }else if(false){ // lowpass
-
-                    pole_hodnot[index] = hodnota;
-
-                    if (index < avg_count) index++;
-                    else pole_hodnot.shift();
-
-                    let smoothing = 10; // koeficient vyhlazení
-
-                    let value = pole_hodnot[0]; // start with the first input
-                    for (let j = 1, len = pole_hodnot.length; j < len; j++) {
-                        value += (pole_hodnot[j] - value) / smoothing;
-                    }
-
-                    hodnota_zrychleni = value;
-                }else if(true){
+                // volba filtru
+                if(true){
                     
                     prubezna_hodnota = prubezna_hodnota * 0.9 + hodnota*0.1;
                     hodnota_zrychleni = prubezna_hodnota;
                 }else{
 
-                    //let smoothing = 10; // koeficient vyhlazení = avg_count
-                    prubezna_hodnota += (hodnota - prubezna_hodnota) / avg_count;
+                    prubezna_hodnota += (hodnota - prubezna_hodnota) / 10;
                     hodnota_zrychleni = prubezna_hodnota;
-                    
                 }
-                pause(10);
+                pause(5);
             }
         });
 
         let buffer: any[] = [];
         let buffer_index = 0;
-
+        for (let i = 0; i < pocet_cisel; i++) buffer.push(0);
 
         control.inBackground(function () {
             while (true) {
 
                 buffer[buffer_index] = Math.round(hodnota_zrychleni);
-                if (buffer_index < 2) buffer_index++;
+                if (buffer_index < pocet_cisel) buffer_index++;
                 else buffer.shift();
 
-                pause(t_pause / 2);
+                pause(t_pause / pocet_cisel);
             }
         })
 
         control.inBackground(function () {
             while (true) {
 
-                let text = "";
-                for (let k = 0; k < buffer.length; k++){
+                let buf = pins.createBuffer(pocet_cisel*2 + popis_hodnoty.length)
 
-                    if (text != '') text += ';'; 
-                    text += buffer[k];
-                     
+                for (let i = 0; i < pocet_cisel; i++){
+
+                    buf.setNumber(NumberFormat.Int16LE, i * 2, buffer[i])
                 }
 
-                radio.sendString(popis_hodnoty + ":" + text)
-                //serial.writeLine(popis_hodnoty + ":" + suma / pole_hodnot.length)
+                for (let i = 0; i < popis_hodnoty.length; i++) {
+
+                    buf.setNumber(NumberFormat.Int8LE, pocet_cisel*2+i, popis_hodnoty.charCodeAt(i));
+                }
+
+                radio.sendBuffer(buf);
                 pause(t_pause);
             }
         })
@@ -102,14 +81,6 @@ namespace NewtonovyZakony{
             if (receivedString == 'GOGO'){
 
                 wuKong.setAllMotor(rychlost_motoru, rychlost_motoru);
-                /*
-                for(let k = 10; k > 0; k--){
-
-                    wuKong.setAllMotor(rychlost_motoru/k, rychlost_motoru/k);
-                    pause(20);
-                }
-                */
-
             }
 
             if (receivedString == 'STOP') {
@@ -124,27 +95,22 @@ namespace NewtonovyZakony{
 
         let prijato = false;
 
-        radio.onReceivedString(function (receivedString) {
-            if(receivedString.includes(';')){
+        radio.onReceivedBuffer(function (receivedBuffer) {
 
-                let data = receivedString.split(';');
-                let popis = data[0].substr(0, data[0].indexOf(':')+1);
+            let popis = '';
+            for (let i = pocet_cisel * 2; i < receivedBuffer.length; i++) {
 
-                serial.writeLine(data[0]);
-                pause(20);
-
-                for (let l = 1; l < data.length; l++){
-                    serial.writeLine(popis + data[l]);
-                    pause(20);
-                }
-
-            }else{
-
-
-                serial.writeLine(receivedString)
+                popis += String.fromCharCode(receivedBuffer.getNumber(NumberFormat.Int8LE, i));
             }
+            for (let i = 0; i < pocet_cisel; i++) {
+
+                serial.writeLine(popis + ':' + receivedBuffer.getNumber(NumberFormat.Int16LE, i * 2));
+                pause(t_pause/5-1);
+            }
+
             prijato = true;
-        })
+        });
+
         radio.setGroup(radioGroup)
         serial.redirectToUSB()
 
