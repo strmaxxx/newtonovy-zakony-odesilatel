@@ -1,4 +1,8 @@
+//% color=#0fbc11 icon="\uf0ac" block="Newtonovy zákony"
 namespace NewtonovyZakony {
+
+    // Další ikonky zde: https://fontawesome.com/v5/search?o=r&m=free
+
     /**
      * Každých 5 ms změří hodnotu z akcelerometru a filtruje ji dolnopropustným filtrem.
      * Každých t_pause/5 ms (25 ms) ukládá aktuální hodnotu do bufferu, který obsahuje 5 hodnot.
@@ -10,13 +14,13 @@ namespace NewtonovyZakony {
     const t_pause = 125;
 
     //% block="Spustí měření a odesílání dat a inicializuje motory, skupina_rádia: %radioGroup, Osa_akcelerometru: %dimension, popis_hodnoty (Maximálně 9 ASCII znaků): %popis_hodnoty, rychlost_motoru: %rychlost_motoru, Rozsah měřených hodnot: %range"
-    export function spustOdesilatele(radioGroup: number, dimension: Dimension, popis_hodnoty:string, rychlost_motoru?:number, range?: AcceleratorRange){
+    export function spustOdesilatele(radioGroup: number, dimension: Dimension, popis_hodnoty:string, rychlost_motoru:number, range?: AcceleratorRange){
 
         let prubezna_hodnota = 0;
         let hodnota_zrychleni = 0;
 
         if (!range) range = AcceleratorRange.OneG;
-        if (!rychlost_motoru) rychlost_motoru = 100;
+        if (!rychlost_motoru) rychlost_motoru = 0;
 
         radio.setGroup(radioGroup);
         input.setAccelerometerRange(range);
