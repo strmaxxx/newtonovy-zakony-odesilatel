@@ -1,4 +1,3 @@
-//% color=#0fbc11 icon="\uf0ac" block="Newtonovy zákony"
 namespace NewtonovyZakony {
 
     // Další ikonky zde: https://fontawesome.com/v5/search?o=r&m=free
@@ -109,7 +108,7 @@ namespace NewtonovyZakony {
             for (let m = 0; m < pocet_cisel; m++) {
 
                 serial.writeLine(popis + ':' + receivedBuffer.getNumber(NumberFormat.Int16LE, m * 2));
-                pause(t_pause/5-1);
+                pause(t_pause/10-1);
             }
 
             prijato = true;
