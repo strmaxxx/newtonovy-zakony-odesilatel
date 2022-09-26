@@ -1,5 +1,5 @@
 {
-    "name": "Newtonovy-zakony-odesilatel",
+    "name": "Newtonovy-zakony-odesilatel-prijemce",
     "description": "",
     "dependencies": {
         "core": "*",
